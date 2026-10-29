@@ -28,7 +28,7 @@ function submit() {
         <img :src="logo" alt="" />
         <h1>My Music</h1>
       </div>
-      <p class="tagline">Your CD collection, beautifully organized.</p>
+      <p class="tagline">Every Track Tells a Story. Every Beat Holds a Memory.</p>
 
       <label class="input-icon">
         <User :size="18" />
