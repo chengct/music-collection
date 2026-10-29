@@ -28,7 +28,7 @@ function submit() {
         <img :src="logo" alt="" />
         <h1>My Music</h1>
       </div>
-      <p class="tagline">Every Track Tells a Story. Every Beat Holds a Memory.</p>
+      <p class="tagline">Every Track Tells a Story. <br>Every Beat Holds a Memory.</p>
 
       <label class="input-icon">
         <User :size="18" />
