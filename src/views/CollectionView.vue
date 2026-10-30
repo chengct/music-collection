@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import {
-  Search, Plus, Pencil, Trash2, ChevronLeft, ChevronRight, ExternalLink, Disc3,
+  Search, X, Plus, Pencil, Trash2, ChevronLeft, ChevronRight, ExternalLink, Disc3,
 } from 'lucide-vue-next'
 import { auth } from '../auth'
 import { config } from '../config'
@@ -9,7 +9,7 @@ import { dbState, query, queryOne, run } from '../db'
 import AppModal from '../components/AppModal.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 
-const filters = reactive({ artist: '', title: '', folder: 'ALL' })
+const filters = reactive({ artist: '', title: '', type: 'ALL', folder: 'ALL' })
 const page = ref(1)
 
 const visibleOnly = 'folder IN (SELECT folder FROM visble_folder WHERE visble = 1)'
@@ -35,6 +35,8 @@ const where = computed(() => {
     parts.push('instr(ulower(title), $title) > 0')
     params.$title = filters.title.trim().toLowerCase()
   }
+  if (filters.type === 'commercial') parts.push('COALESCE(sampler, 0) = 0')
+  if (filters.type === 'sampler') parts.push('sampler = 1')
   if (filters.folder !== 'ALL') {
     parts.push('folder = $folder')
     params.$folder = filters.folder
@@ -50,6 +52,8 @@ const total = computed(() => {
 
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / config.pageSize)))
 
+const offset = computed(() => (Math.max(1, Math.trunc(Number(page.value)) || 1) - 1) * config.pageSize)
+
 const rows = computed(() => {
   dbState.version
   return query(
@@ -58,7 +62,7 @@ const rows = computed(() => {
     {
       ...where.value.params,
       $limit: config.pageSize,
-      $offset: (Math.max(1, Math.trunc(Number(page.value)) || 1) - 1) * config.pageSize,
+      $offset: offset.value,
     },
   )
 })
@@ -157,11 +161,32 @@ async function remove() {
       <label class="search">
         <Search :size="18" />
         <input v-model="filters.artist" class="input" placeholder="搜尋 Artist" />
+        <button
+          v-if="filters.artist"
+          type="button"
+          class="clear"
+          title="清除"
+          aria-label="清除 Artist"
+          @click.prevent="filters.artist = ''"
+        ><X :size="16" /></button>
       </label>
       <label class="search">
         <Search :size="18" />
         <input v-model="filters.title" class="input" placeholder="搜尋 Title" />
+        <button
+          v-if="filters.title"
+          type="button"
+          class="clear"
+          title="清除"
+          aria-label="清除 Title"
+          @click.prevent="filters.title = ''"
+        ><X :size="16" /></button>
       </label>
+      <select v-model="filters.type" class="select" aria-label="類別">
+        <option value="ALL">All</option>
+        <option value="commercial">Commercial</option>
+        <option value="sampler">Sampler</option>
+      </select>
       <select v-model="filters.folder" class="select" aria-label="Folder">
         <option value="ALL">ALL</option>
         <option v-for="f in folders" :key="f" :value="f">{{ f }}</option>
@@ -169,11 +194,22 @@ async function remove() {
     </div>
 
     <div class="card list">
+      <div class="head">
+        <span class="head-title">Title/Artist</span>
+        <span>Discogs ID</span>
+        <span class="year">Year</span>
+        <span>Folder</span>
+        <span class="head-action">Action</span>
+      </div>
       <div v-if="!rows.length" class="empty">找不到符合的 CD</div>
-      <div v-for="row in rows" :key="row.id" class="item">
+      <div v-for="(row, i) in rows" :key="row.id" class="item">
+        <span class="no">{{ offset + i + 1 }}</span>
         <div class="cover"><Disc3 :size="22" /></div>
         <div class="info">
-          <strong class="title">{{ row.title }}</strong>
+          <div class="title-row">
+            <strong class="title">{{ row.title }}</strong>
+            <span v-if="row.sampler" class="tag tag-sampler">sampler</span>
+          </div>
           <span class="artist">{{ row.artist }}</span>
         </div>
         <div class="meta">
@@ -186,6 +222,7 @@ async function remove() {
           >{{ row.release_id }}<ExternalLink :size="12" /></a>
           <span v-else class="rid muted">-</span>
           <span class="year">{{ year(row.release_date) }}</span>
+          <span class="folder"><span v-if="row.folder" class="tag tag-folder">{{ row.folder }}</span></span>
         </div>
         <div class="actions">
           <button class="icon-btn" title="編輯" aria-label="編輯" @click="openForm(row)"><Pencil :size="16" /></button>
@@ -238,7 +275,7 @@ async function remove() {
 <style scoped>
 .filters {
   display: grid;
-  grid-template-columns: 1fr 1fr 200px;
+  grid-template-columns: 1fr 1fr 160px 200px;
   gap: 12px;
   margin-bottom: 20px;
 }
@@ -248,7 +285,7 @@ async function remove() {
   color: var(--text-muted);
 }
 
-.search svg {
+.search > svg {
   position: absolute;
   left: 16px;
   top: 50%;
@@ -258,6 +295,28 @@ async function remove() {
 
 .search .input {
   padding-left: 44px;
+  padding-right: 44px;
+}
+
+.clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.clear:hover {
+  background: var(--surface-hover);
+  color: var(--text);
 }
 
 .select {
@@ -265,12 +324,44 @@ async function remove() {
 }
 
 .list {
-  padding: 8px;
+  --cols: 32px 44px minmax(0, 1fr) 110px 44px 150px 76px;
+  padding: 0 8px 8px;
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  gap: 16px;
+  padding: 14px 12px 10px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 8px 8px 0 0;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.head-title {
+  grid-column: 3;
+}
+
+.head-action {
+  text-align: center;
+}
+
+.list .head + * {
+  margin-top: 8px;
 }
 
 .item {
   display: grid;
-  grid-template-columns: 44px 1fr auto auto;
+  grid-template-columns: var(--cols);
   align-items: center;
   gap: 16px;
   padding: 10px 12px;
@@ -280,6 +371,14 @@ async function remove() {
 
 .item:hover {
   background: var(--surface-hover);
+}
+
+.no {
+  min-width: 32px;
+  text-align: right;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .cover {
@@ -299,6 +398,13 @@ async function remove() {
   gap: 2px;
 }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .title {
   font-size: 15px;
   font-weight: 700;
@@ -316,18 +422,26 @@ async function remove() {
 }
 
 .meta {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+  display: contents;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+.folder {
+  min-width: 0;
+  display: flex;
+}
+
+.folder .tag {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rid {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-width: 90px;
+  font-size: 13px;
   color: var(--accent-text);
   text-decoration: none;
   font-variant-numeric: tabular-nums;
@@ -342,13 +456,33 @@ async function remove() {
 }
 
 .year {
-  min-width: 36px;
+  font-size: 13px;
+  color: var(--text-muted);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
+.tag {
+  padding: 1px 10px;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.tag-folder {
+  color: var(--tag-blue);
+}
+
+.tag-sampler {
+  color: var(--tag-orange);
+}
+
 .actions {
   display: flex;
+  justify-content: center;
   gap: 2px;
 }
 
@@ -395,13 +529,27 @@ async function remove() {
   padding-bottom: 10px;
 }
 
+@media (max-width: 896px) {
+  .head {
+    top: 56px;
+  }
+}
+
 @media (max-width: 768px) {
   .filters {
     grid-template-columns: 1fr;
   }
 
+  .head {
+    display: none;
+  }
+
+  .list {
+    padding-top: 8px;
+  }
+
   .item {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr auto;
     gap: 6px 12px;
   }
 
@@ -409,14 +557,23 @@ async function remove() {
     display: none;
   }
 
+  .no {
+    grid-row: 1 / span 2;
+    min-width: 24px;
+  }
+
   .meta {
     grid-row: 2;
-    gap: 16px;
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 16px;
   }
 
   .actions {
     grid-row: 1 / span 2;
-    grid-column: 2;
+    grid-column: 3;
   }
 
   .form {
