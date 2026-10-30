@@ -154,7 +154,7 @@ async function remove() {
         <h1 class="page-title">Collection</h1>
         <p class="page-sub">共 {{ total.toLocaleString() }} 筆</p>
       </div>
-      <button class="btn btn-primary" @click="openForm()"><Plus :size="18" />新增 CD</button>
+      <button v-if="auth.user.admin" class="btn btn-primary" @click="openForm()"><Plus :size="18" />新增 CD</button>
     </div>
 
     <div class="filters">
@@ -193,13 +193,13 @@ async function remove() {
       </select>
     </div>
 
-    <div class="card list">
+    <div class="card list" :class="{ admin: auth.user.admin }">
       <div class="head">
         <span class="head-title">Title/Artist</span>
         <span>Discogs ID</span>
         <span class="year">Year</span>
         <span>Folder</span>
-        <span class="head-action">Action</span>
+        <span v-if="auth.user.admin" class="head-action">Action</span>
       </div>
       <div v-if="!rows.length" class="empty">找不到符合的 CD</div>
       <div v-for="(row, i) in rows" :key="row.id" class="item">
@@ -208,9 +208,12 @@ async function remove() {
         <div class="info">
           <div class="title-row">
             <strong class="title">{{ row.title }}</strong>
-            <span v-if="row.sampler" class="tag tag-sampler">sampler</span>
+            <span v-if="row.sampler" class="tag tag-sampler desktop-only">sampler</span>
           </div>
-          <span class="artist">{{ row.artist }}</span>
+          <div class="title-row">
+            <span class="artist">{{ row.artist }}</span>
+            <span v-if="row.sampler" class="tag tag-sampler mobile-only">sampler</span>
+          </div>
         </div>
         <div class="meta">
           <a
@@ -224,7 +227,7 @@ async function remove() {
           <span class="year">{{ year(row.release_date) }}</span>
           <span class="folder"><span v-if="row.folder" class="tag tag-folder">{{ row.folder }}</span></span>
         </div>
-        <div class="actions">
+        <div v-if="auth.user.admin" class="actions">
           <button class="icon-btn" title="編輯" aria-label="編輯" @click="openForm(row)"><Pencil :size="16" /></button>
           <button class="icon-btn danger" title="刪除" aria-label="刪除" @click="deleting = row"><Trash2 :size="16" /></button>
         </div>
@@ -324,8 +327,16 @@ async function remove() {
 }
 
 .list {
-  --cols: 32px 44px minmax(0, 1fr) 110px 44px 150px 76px;
+  --cols: 32px 44px minmax(0, 1fr) 110px 44px 150px;
   padding: 0 8px 8px;
+}
+
+.list.admin {
+  --cols: 32px 44px minmax(0, 1fr) 110px 44px 150px 76px;
+}
+
+.mobile-only {
+  display: none;
 }
 
 .head {
@@ -549,12 +560,29 @@ async function remove() {
   }
 
   .item {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr;
     gap: 6px 12px;
   }
 
   .cover {
     display: none;
+  }
+
+  .admin .item {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: inline;
   }
 
   .no {
