@@ -394,8 +394,12 @@ async function remove() {
   transition: background 0.12s;
 }
 
+.item:nth-child(odd) {
+  background: var(--row-stripe);
+}
+
 .item:hover {
-  background: var(--surface-hover);
+  background: var(--row-hover);
 }
 
 .no {
@@ -412,8 +416,12 @@ async function remove() {
   width: 44px;
   height: 44px;
   border-radius: 4px;
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--text-muted);
+}
+
+.item:nth-child(odd) .cover {
+  background: var(--surface-2);
 }
 
 .info {

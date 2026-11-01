@@ -4,6 +4,8 @@
   --bg: #121212;
   --surface: #181818;
   --surface-2: #1f1f1f;
+  --row-stripe: #2b2b2b;
+  --row-hover: #3a3a3a;
   --surface-hover: #2a2a2a;
   --text: #ffffff;
   --text-muted: #b3b3b3;
@@ -24,6 +26,8 @@
   --bg: #f4f4f4;
   --surface: #ffffff;
   --surface-2: #eeeeee;
+  --row-stripe: #e6e6e6;
+  --row-hover: #d6d6d6;
   --surface-hover: #e4e4e4;
   --text: #121212;
   --text-muted: #5f5f5f;
