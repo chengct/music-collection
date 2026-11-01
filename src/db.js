@@ -15,6 +15,18 @@ export const dbState = reactive({
   version: 0, // 每次寫入後遞增，讓畫面重新查詢
 })
 
+// SQLite 內建 lower() 只處理 ASCII，改用 JS 做不分大小寫比對
+function registerFunctions() {
+  db.create_function('ulower', (s) => (s == null ? null : String(s).toLowerCase()))
+}
+
+// db.export() 會關閉並重開連線，自訂函式會消失，要重新註冊
+function exportBytes() {
+  const bytes = db.export()
+  registerFunctions()
+  return bytes
+}
+
 export function openDb() {
   opening ??= (async () => {
     const SQL = await initSqlJs({ locateFile: () => wasmUrl })
@@ -27,8 +39,7 @@ export function openDb() {
       if (!res.ok) throw new Error(`無法載入資料庫 (HTTP ${res.status})`)
       db = new SQL.Database(new Uint8Array(await res.arrayBuffer()))
     }
-    // SQLite 內建 lower() 只處理 ASCII，改用 JS 做不分大小寫比對
-    db.create_function('ulower', (s) => (s == null ? null : String(s).toLowerCase()))
+    registerFunctions()
   })()
   return opening
 }
@@ -52,13 +63,13 @@ export function queryOne(sql, params = {}) {
 // 執行寫入並存到 IndexedDB
 export async function run(sql, params = {}) {
   db.run(sql, params)
-  await set(STORE_KEY, db.export())
+  await set(STORE_KEY, exportBytes())
   dbState.modified = true
   dbState.version++
 }
 
 export function exportDb() {
-  const blob = new Blob([db.export()], { type: 'application/vnd.sqlite3' })
+  const blob = new Blob([exportBytes()], { type: 'application/vnd.sqlite3' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = 'music.db'
