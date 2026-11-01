@@ -84,7 +84,8 @@ h1 {
 @media (max-width: 896px) {
   .home {
     min-height: calc(100vh - 56px);
-    padding: 24px 16px;
+    min-height: calc(100dvh - 56px);
+    padding: 24px 16px 64px;
   }
 }
 </style>

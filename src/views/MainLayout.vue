@@ -306,6 +306,7 @@ nav {
   .content {
     margin-left: 0;
     min-height: calc(100vh - 56px);
+    min-height: calc(100dvh - 56px);
   }
 }
 </style>
