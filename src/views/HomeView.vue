@@ -18,7 +18,7 @@ const total = computed(() => {
     <div class="hero">
       <p class="eyebrow">Welcome back, {{ auth.user?.name }}</p>
       <h1>My Music</h1>
-      <p class="stat"><strong>{{ total.toLocaleString() }}</strong> CDs in your collection</p>
+      <p class="stat"><strong>{{ total.toLocaleString() }}</strong> CDs in collection</p>
       <RouterLink :to="{ name: 'collection' }" class="btn btn-primary">Browse collection</RouterLink>
     </div>
   </section>

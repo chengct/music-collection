@@ -9,7 +9,7 @@ import { dbState, query, queryOne, run } from '../db'
 import AppModal from '../components/AppModal.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 
-const filters = reactive({ artist: '', title: '', type: 'ALL', folder: 'ALL' })
+const filters = reactive({ artist: '', title: '', folder: 'ALL', sampler: false })
 const page = ref(1)
 
 const visibleOnly = 'folder IN (SELECT folder FROM visble_folder WHERE visble = 1)'
@@ -35,8 +35,7 @@ const where = computed(() => {
     parts.push('instr(ulower(title), $title) > 0')
     params.$title = filters.title.trim().toLowerCase()
   }
-  if (filters.type === 'commercial') parts.push('COALESCE(sampler, 0) = 0')
-  if (filters.type === 'sampler') parts.push('sampler = 1')
+  if (filters.sampler) parts.push('sampler = 1')
   if (filters.folder !== 'ALL') {
     parts.push('folder = $folder')
     params.$folder = filters.folder
@@ -182,15 +181,14 @@ async function remove() {
           @click.prevent="filters.title = ''"
         ><X :size="16" /></button>
       </label>
-      <select v-model="filters.type" class="select" aria-label="類別">
-        <option value="ALL">All</option>
-        <option value="commercial">Commercial</option>
-        <option value="sampler">Sampler</option>
-      </select>
-      <select v-model="filters.folder" class="select" aria-label="Folder">
-        <option value="ALL">ALL</option>
-        <option v-for="f in folders" :key="f" :value="f">{{ f }}</option>
-      </select>
+      <label class="folder-filter">
+        <span>Folder</span>
+        <select v-model="filters.folder" class="select">
+          <option value="ALL">ALL</option>
+          <option v-for="f in folders" :key="f" :value="f">{{ f }}</option>
+        </select>
+      </label>
+      <label class="check"><input v-model="filters.sampler" type="checkbox" />Sampler</label>
     </div>
 
     <div class="card list" :class="{ admin: auth.user.admin }">
@@ -278,7 +276,7 @@ async function remove() {
 <style scoped>
 .filters {
   display: grid;
-  grid-template-columns: 1fr 1fr 160px 200px;
+  grid-template-columns: 1fr 1fr 260px auto;
   gap: 12px;
   margin-bottom: 20px;
 }
@@ -324,6 +322,22 @@ async function remove() {
 
 .select {
   cursor: pointer;
+}
+
+.folder-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.folder-filter .select {
+  flex: 1;
+  min-width: 0;
+  font-weight: 400;
 }
 
 .list {
@@ -548,7 +562,32 @@ async function remove() {
 
 @media (max-width: 768px) {
   .filters {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 8px;
+  }
+
+  .search {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .search > svg {
+    left: 12px;
+  }
+
+  .search .input {
+    padding-left: 36px;
+    padding-right: 32px;
+  }
+
+  .clear {
+    right: 2px;
+  }
+
+  .folder-filter {
+    flex: 1;
   }
 
   .head {
