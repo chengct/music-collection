@@ -24,6 +24,12 @@ const folders = computed(() => {
   return query(sql).map((r) => r.folder)
 })
 
+// 新增 / 編輯 CD 時可選的 folder，一律來自 visble_folder
+const formFolders = computed(() => {
+  dbState.version
+  return query('SELECT folder FROM visble_folder ORDER BY folder').map((r) => r.folder)
+})
+
 const where = computed(() => {
   const parts = []
   const params = {}
@@ -127,13 +133,6 @@ async function save() {
       params,
     )
   }
-  // 新的 folder 自動加入 visble_folder (預設可見)
-  await run(
-    `INSERT INTO visble_folder (id, folder, visble)
-     SELECT (SELECT COALESCE(MAX(id), 0) + 1 FROM visble_folder), $folder, 1
-     WHERE NOT EXISTS (SELECT 1 FROM visble_folder WHERE folder = $folder)`,
-    { $folder: f.folder },
-  )
   editing.value = null
 }
 
@@ -196,7 +195,7 @@ async function remove() {
         <span class="head-title">Title/Artist</span>
         <span>Discogs ID</span>
         <span class="year">Year</span>
-        <span>Folder</span>
+        <span class="head-folder">Folder</span>
         <span v-if="auth.user.admin" class="head-action">Action</span>
       </div>
       <div v-if="!rows.length" class="empty">找不到符合的 CD</div>
@@ -246,10 +245,10 @@ async function remove() {
         </label>
         <label class="field">
           <span>Folder *</span>
-          <input v-model="editing.folder" class="input" list="folder-list" required />
-          <datalist id="folder-list">
-            <option v-for="f in folders" :key="f" :value="f" />
-          </datalist>
+          <select v-model="editing.folder" class="select" required>
+            <option value="" disabled>請選擇</option>
+            <option v-for="f in formFolders" :key="f" :value="f">{{ f }}</option>
+          </select>
         </label>
         <div class="field checks">
           <label class="check"><input v-model="editing.hidden" type="checkbox" />Hidden</label>
@@ -376,6 +375,7 @@ async function remove() {
   grid-column: 3;
 }
 
+.head-folder,
 .head-action {
   text-align: center;
 }
@@ -463,6 +463,7 @@ async function remove() {
 .folder {
   min-width: 0;
   display: flex;
+  justify-content: center;
 }
 
 .folder .tag {

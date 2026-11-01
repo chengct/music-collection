@@ -60,12 +60,29 @@ export function queryOne(sql, params = {}) {
   return query(sql, params)[0] ?? null
 }
 
-// 執行寫入並存到 IndexedDB
-export async function run(sql, params = {}) {
-  db.run(sql, params)
+async function persist() {
   await set(STORE_KEY, exportBytes())
   dbState.modified = true
   dbState.version++
+}
+
+// 執行寫入並存到 IndexedDB
+export async function run(sql, params = {}) {
+  db.run(sql, params)
+  await persist()
+}
+
+// 在同一個交易裡執行多筆寫入，全部成功才存檔
+export async function runAll(statements) {
+  db.run('BEGIN')
+  try {
+    for (const [sql, params] of statements) db.run(sql, params)
+    db.run('COMMIT')
+  } catch (e) {
+    db.run('ROLLBACK')
+    throw e
+  }
+  await persist()
 }
 
 export function exportDb() {
