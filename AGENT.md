@@ -18,7 +18,7 @@
     - 以table: collection 為來源, 可以對CD管理，新增、編輯、刪除。
     - 可以Artist, Title 分別搜尋。 查詢不分大小寫。
 	- 有folder類別下拉可篩選，預設為ALL(不區分)
-	- 查詢的列表每頁20筆，可分頁，每一筆內容呈現 Title (粗體), Artist, release id, release year
+	- 查詢的列表每頁50筆，可分頁，每一筆內容呈現 Title (粗體), Artist, release id, release year
 	- release id 設成 hyperlink, 點選後用 _blank 開啟另一視窗，網址為 discogs_url/{release_id}，  
 	$discogs_url 拉出來放在設定檔，值為 https://www.discogs.com/release/
 	- 管理者可見所有folder, 非管理者只可看到 visble_folder設為1的
