@@ -12,7 +12,9 @@ import ConfirmDialog from '../components/ConfirmDialog.vue'
 const filters = reactive({ artist: '', title: '', folder: 'ALL', sampler: false })
 const page = ref(1)
 
-const visibleOnly = 'folder IN (SELECT folder FROM visble_folder WHERE visble = 1)'
+// 非管理者：只看 visble = 1 的 folder，且不顯示 hidden = 1 的資料
+const visibleOnly =
+  'folder IN (SELECT folder FROM visble_folder WHERE visble = 1) AND IFNULL(hidden, 0) = 0'
 
 // 管理者可見所有 folder，非管理者只看 visble = 1 的
 const folders = computed(() => {

@@ -8,7 +8,7 @@ const total = computed(() => {
   dbState.version
   const where = auth.user?.admin
     ? ''
-    : 'WHERE folder IN (SELECT folder FROM visble_folder WHERE visble = 1)'
+    : 'WHERE folder IN (SELECT folder FROM visble_folder WHERE visble = 1) AND IFNULL(hidden, 0) = 0'
   return queryOne(`SELECT COUNT(*) AS n FROM collection ${where}`).n
 })
 </script>
