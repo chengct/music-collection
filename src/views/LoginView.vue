@@ -47,6 +47,7 @@ function submit() {
       </label>
 
       <p v-if="error" class="error-text">{{ error }}</p>
+      <p class="guest-hint">Guests are welcome. Log in with <strong>guest</strong> / <strong>guest</strong></p>
       <button class="btn btn-primary submit" type="submit">Log in</button>
     </form>
   </div>
@@ -144,8 +145,20 @@ h1 {
   color: #f3727f;
 }
 
+.guest-hint {
+  margin: 4px 0 -6px;
+  text-align: center;
+  font-size: 12px;
+  color: #b3b3b3;
+}
+
+.guest-hint strong {
+  color: #fff;
+  font-weight: 600;
+}
+
 .submit {
-  margin-top: 8px;
+  margin-top: 0;
   padding: 14px;
 }
 </style>
