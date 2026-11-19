@@ -232,10 +232,7 @@ async function remove() {
             <strong class="title">{{ row.title }}</strong>
             <span v-if="row.sampler" class="tag tag-sampler desktop-only">sampler</span>
           </div>
-          <div class="title-row">
-            <span class="artist">{{ row.artist }}</span>
-            <span v-if="row.sampler" class="tag tag-sampler mobile-only">sampler</span>
-          </div>
+          <span class="artist">{{ row.artist }}</span>
         </div>
         <div class="meta">
           <a
@@ -248,10 +245,12 @@ async function remove() {
           <span v-else class="rid muted">-</span>
           <span class="year">{{ year(row.release_date) }}</span>
           <span class="folder"><span v-if="row.folder" class="tag tag-folder">{{ row.folder }}</span></span>
-        </div>
-        <div v-if="auth.user.admin" class="actions">
-          <button class="icon-btn" title="編輯" aria-label="編輯" @click="openForm(row)"><Pencil :size="16" /></button>
-          <button class="icon-btn danger" title="刪除" aria-label="刪除" @click="deleting = row"><Trash2 :size="16" /></button>
+          <span v-if="row.sampler" class="tag tag-sampler mobile-only">sampler</span>
+          <!-- 桌機版 .meta 為 display: contents，actions 仍是獨立欄位；手機版接在標記後面 -->
+          <div v-if="auth.user.admin" class="actions">
+            <button class="icon-btn" title="編輯" aria-label="編輯" @click="openForm(row)"><Pencil :size="16" /></button>
+            <button class="icon-btn danger" title="刪除" aria-label="刪除" @click="deleting = row"><Trash2 :size="16" /></button>
+          </div>
         </div>
       </div>
     </div>
@@ -636,23 +635,21 @@ async function remove() {
   }
 
   .list {
-    padding-top: 8px;
+    padding: 8px 4px 4px;
   }
 
   .item {
     grid-template-columns: auto 1fr;
-    gap: 6px 12px;
+    gap: 6px 10px;
+    padding: 10px 8px;
   }
 
   .cover {
     display: none;
   }
 
-  .admin .item {
-    grid-template-columns: auto 1fr auto;
-  }
-
-  .title {
+  .title,
+  .artist {
     white-space: normal;
     overflow-wrap: anywhere;
   }
@@ -670,40 +667,41 @@ async function remove() {
     min-width: 24px;
   }
 
+  /* Title / Artist 佔滿整列寬度；第二列依序為 ID、年份、Folder、sampler、編輯 / 刪除 */
   .meta {
     grid-row: 2;
     grid-column: 2;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 6px 16px;
+    gap: 6px 10px;
   }
 
   .actions {
-    grid-row: 1 / span 2;
-    grid-column: 3;
+    gap: 0;
+    margin-left: auto;
+    margin-right: -6px;
+  }
+
+  .actions .icon-btn {
+    width: 30px;
+    height: 30px;
   }
 
   /* Show Cover 開啟時，手機版也顯示封面 */
   .covers .item {
-    grid-template-columns: auto 44px 1fr;
-  }
-
-  .covers.admin .item {
-    grid-template-columns: auto 44px 1fr auto;
+    grid-template-columns: auto 40px 1fr;
   }
 
   .covers .cover {
     display: grid;
+    width: 40px;
+    height: 40px;
     grid-row: 1 / span 2;
   }
 
   .covers .meta {
     grid-column: 3;
-  }
-
-  .covers .actions {
-    grid-column: 4;
   }
 
   .form {
