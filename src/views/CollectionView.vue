@@ -206,7 +206,7 @@ async function remove() {
       <label class="check"><input v-model="filters.sampler" type="checkbox" />Sampler</label>
     </div>
 
-    <div class="card list" :class="{ admin: auth.user.admin }">
+    <div class="card list" :class="{ admin: auth.user.admin, covers: showCover }">
       <div class="head">
         <span class="head-title">Title/Artist</span>
         <span>Discogs ID</span>
@@ -682,6 +682,28 @@ async function remove() {
   .actions {
     grid-row: 1 / span 2;
     grid-column: 3;
+  }
+
+  /* Show Cover 開啟時，手機版也顯示封面 */
+  .covers .item {
+    grid-template-columns: auto 44px 1fr;
+  }
+
+  .covers.admin .item {
+    grid-template-columns: auto 44px 1fr auto;
+  }
+
+  .covers .cover {
+    display: grid;
+    grid-row: 1 / span 2;
+  }
+
+  .covers .meta {
+    grid-column: 3;
+  }
+
+  .covers .actions {
+    grid-column: 4;
   }
 
   .form {
