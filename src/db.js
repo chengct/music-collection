@@ -40,6 +40,8 @@ export function openDb() {
       db = new SQL.Database(new Uint8Array(await res.arrayBuffer()))
     }
     registerFunctions()
+    // 系統設定表，舊版 music.db 沒有時自動建立
+    db.run('CREATE TABLE IF NOT EXISTS app_setting (key VARCHAR PRIMARY KEY, value VARCHAR)')
   })()
   return opening
 }
@@ -58,6 +60,18 @@ export function query(sql, params = {}) {
 
 export function queryOne(sql, params = {}) {
   return query(sql, params)[0] ?? null
+}
+
+export function getSetting(key) {
+  return queryOne('SELECT value FROM app_setting WHERE key = $key', { $key: key })?.value ?? null
+}
+
+export function setSetting(key, value) {
+  return run(
+    `INSERT INTO app_setting (key, value) VALUES ($key, $value)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    { $key: key, $value: value },
+  )
 }
 
 async function persist() {

@@ -5,9 +5,23 @@ import {
 } from 'lucide-vue-next'
 import { auth } from '../auth'
 import { config } from '../config'
-import { dbState, query, queryOne, run } from '../db'
+import { dbState, getSetting, query, queryOne, run } from '../db'
+import { coverIds, coverUrl, loadCovers } from '../covers'
 import AppModal from '../components/AppModal.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
+
+// 封面：Visable Folder 管理裡的 Show Cover 開關，沒有封面或載入失敗就顯示唱片 icon
+const showCover = computed(() => {
+  dbState.version
+  return getSetting('show_cover') === '1'
+})
+watch(showCover, (on) => on && loadCovers(), { immediate: true })
+const brokenCovers = reactive(new Set())
+
+function cover(row) {
+  const id = String(row.release_id ?? '')
+  return showCover.value && coverIds.has(id) && !brokenCovers.has(id) ? coverUrl(id) : null
+}
 
 const filters = reactive({ artist: '', title: '', folder: 'ALL', sampler: false })
 const page = ref(1)
@@ -203,7 +217,16 @@ async function remove() {
       <div v-if="!rows.length" class="empty">找不到符合的 CD</div>
       <div v-for="(row, i) in rows" :key="row.id" class="item">
         <span class="no">{{ offset + i + 1 }}</span>
-        <div class="cover"><Disc3 :size="22" /></div>
+        <div class="cover">
+          <img
+            v-if="cover(row)"
+            :src="cover(row)"
+            alt=""
+            loading="lazy"
+            @error="brokenCovers.add(String(row.release_id))"
+          />
+          <Disc3 v-else :size="22" />
+        </div>
         <div class="info">
           <div class="title-row">
             <strong class="title">{{ row.title }}</strong>
@@ -418,8 +441,15 @@ async function remove() {
   width: 44px;
   height: 44px;
   border-radius: 4px;
+  overflow: hidden;
   background: var(--surface);
   color: var(--text-muted);
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .item:nth-child(odd) .cover {

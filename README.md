@@ -29,3 +29,18 @@ GitHub Pages 為靜態主機，網頁上的新增、編輯、刪除只會存在�
 ## 注意
 
 `music.db` 會公開於網站上，`user_info` 的帳號密碼任何人皆可下載取得，僅適合不需保密的使用情境。
+
+## 封面照片
+
+封面存放於 `public/covers/{release_id}.webp`（150px），清單為 `public/covers/index.json`。
+由管理者在「Visable Folder 管理」開啟 Show Cover 後，Collection 列表才會顯示封面。
+
+下載 / 補齊封面（需 Discogs 個人 token 與 Pillow）：
+
+```powershell
+pip install pillow
+$env:DISCOGS_TOKEN = "你的 token"
+python scripts/fetch_covers.py
+```
+
+已下載的會跳過；Discogs 上沒有封面的 release 記錄於 `scripts/covers-missing.txt`，可用 `--retry-missing` 重試。

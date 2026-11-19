@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { Folder, Pencil, Plus, Trash2 } from 'lucide-vue-next'
-import { dbState, query, queryOne, run, runAll } from '../db'
+import { Folder, Image as ImageIcon, Pencil, Plus, Trash2 } from 'lucide-vue-next'
+import { dbState, getSetting, query, queryOne, run, runAll, setSetting } from '../db'
 import AppModal from '../components/AppModal.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 
@@ -18,6 +18,16 @@ const visibleCount = computed(() => folders.value.filter((f) => f.visble).length
 
 function toggle(f) {
   run('UPDATE visble_folder SET visble = $v WHERE id = $id', { $v: f.visble ? 0 : 1, $id: f.id })
+}
+
+// Collection 列表是否顯示封面照片
+const showCover = computed(() => {
+  dbState.version
+  return getSetting('show_cover') === '1'
+})
+
+function toggleCover() {
+  setSetting('show_cover', showCover.value ? '0' : '1')
 }
 
 const editing = ref(null)
@@ -77,6 +87,21 @@ async function remove() {
         <p class="page-sub">一般使用者只能看到開啟的 folder（{{ visibleCount }} / {{ folders.length }}）</p>
       </div>
       <button class="btn btn-primary" @click="openForm()"><Plus :size="18" />新增 Folder</button>
+    </div>
+
+    <div class="card folder setting" :class="{ off: !showCover }">
+      <div class="icon"><ImageIcon :size="22" /></div>
+      <div class="info">
+        <strong>Show Cover</strong>
+        <span>在 Collection 列表顯示封面照片，關閉或沒有照片時顯示唱片圖示</span>
+      </div>
+      <button
+        class="switch"
+        role="switch"
+        :aria-checked="showCover"
+        aria-label="Show Cover"
+        @click="toggleCover"
+      ><span /></button>
     </div>
 
     <div class="grid">
@@ -144,6 +169,10 @@ async function remove() {
   gap: 10px;
   padding: 16px 12px;
   transition: opacity 0.15s;
+}
+
+.setting {
+  margin-bottom: 20px;
 }
 
 .folder.off .icon,
